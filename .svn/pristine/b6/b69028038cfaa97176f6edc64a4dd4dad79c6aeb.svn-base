@@ -1,0 +1,20 @@
+@label_color: #666666;
+@label_font_size: 14px;
+
+.LabelComp {
+  display: inline-block;
+  font-size: @label_font_size;
+  height: 26px;
+  line-height: 26px;
+  color: @label_color;
+  padding-left: 2px;
+  padding-right: 10px;
+  vertical-align: middle;
+
+  .require {
+    &:after {
+      content: '*';
+      color: red;
+    }
+  }
+}

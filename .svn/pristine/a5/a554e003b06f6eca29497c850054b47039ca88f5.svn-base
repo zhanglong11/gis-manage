@@ -1,0 +1,34 @@
+import React, {Component} from 'react';
+import {LocaleProvider} from 'antd';
+import { Route, HashRouter as Router } from 'react-router-dom';
+import zh_CN from 'antd/lib/locale-provider/zh_CN';
+import moment from 'moment';
+import 'moment/locale/zh-cn';
+import Login from '../pages/Login';
+import MenuChoose from '../pages/MenuChoose';
+import GisProject from '../pages/Gis/ProjectChoose';
+import BimProject from '../pages/Bim/ProjectChoose';
+import GisMan from '../pages/Gis/Main'
+import BimMan from '../pages/Bim/Main'
+import './stlye.less';
+
+moment.locale('zh-cn');
+
+class App extends Component {
+    render() {
+        return (
+            <LocaleProvider locale={zh_CN}>
+                <Router>
+                    <Route exact path="/" component={Login}/>
+                    <Route path="/menu" component={MenuChoose}/>
+                    <Route path="/gisProject" component={GisProject}/>
+                    <Route path="/bimProject" component={BimProject}/>
+                    <Route path="/gis" component={GisMan}/>
+                    <Route path="/bim" component={BimMan}/>
+                </Router>
+            </LocaleProvider>
+        )
+    }
+}
+
+export default App;

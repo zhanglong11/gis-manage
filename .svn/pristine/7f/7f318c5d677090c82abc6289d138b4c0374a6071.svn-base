@@ -1,0 +1,55 @@
+import React, {Component} from 'react';
+import {Icon, Card} from 'antd';
+import './style.less'
+
+const {Meta} = Card;
+
+export default class MenuChoose extends Component {
+    changeMenu = (type) => {
+        this.props.history.push({
+            pathname: `/${type}project`
+        })
+    }
+
+    changeMain = (type) => {
+        this.props.history.push({
+            pathname: `/${type}`
+        })
+    }
+
+    render() {
+        return (
+            <div className='menu-wrapper'>
+                <Card
+                    hoverable
+                    style={{width:200, margin:10}}
+                    onClick={()=>{this.changeMenu('bim')}}
+                >
+                    <div className='menu-title'>BIM</div>
+                    <p className='menu-desc'>BIM数据管理</p>
+                    {/*<Meta*/}
+                        {/*title="BIM"*/}
+                        {/*description="This is the description"*/}
+                    {/*/>*/}
+                </Card>
+                <Card
+                    hoverable
+                    style={{width:200, margin:10}}
+                    onClick={()=>{this.changeMenu('gis')}}
+                >
+                    <div className='menu-title'>GIS</div>
+                    <p className='menu-desc'>GIS数据管理</p>
+                </Card>
+
+                <Card
+                    hoverable
+                    style={{width:200, margin:10}}
+                    onClick={()=>{this.changeMain('cis')}}
+                >
+                    <div className='menu-title'>CIS</div>
+                    <p className='menu-desc'>Cis数据管理</p>
+                </Card>
+            </div>
+        );
+    }
+}

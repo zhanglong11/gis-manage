@@ -1,0 +1,863 @@
+import React, {Component} from "react";
+import {InputC, NumberInput} from '../../../components/Form'
+import Label from '../../../components/Label'
+import './style.less'
+import {Button, Table, Select, Checkbox, Radio, DatePicker, message} from "antd";
+import {post} from "../../../fetch";
+import {CORE_URL, CORE} from "../../../config/http";
+import Loading from '../../../components/Loading'
+import moment from 'moment';
+
+const {Option} = Select;
+
+
+const checkLabel = {
+    width: 150,
+    marginLeft: 20
+}
+const checkStyle = {
+    width: 130
+}
+
+const radioStyle = {
+    width: 100,
+    marginLeft: 8
+}
+
+
+export default class ElementSet extends Component {
+
+    state = {
+        name: '',
+        type: null,
+        pageBaseX: null,
+        pageBaseY: null,
+        blockSize: null,
+        imageBaseSize: null,
+        imageMaxSize: null,
+        isSplit: null,
+        isShirt: null,
+        isGenerateLod: null,
+        lodLevel: null,
+        lodType: null,
+        isSpliceRepeatImage: null,
+        isGenerateShadow: null,
+        isShowDetail: false,
+        editorIndex: null,
+        detailEditorIndex: null,
+        detailType: '',
+        data: [
+
+        ],
+        handleType: this.props.type,
+        projectId:this.props.projectId,
+        id: this.props.id,
+        pId: this.props.pId,
+        isLoading: false
+    }
+
+
+    componentDidMount() {
+        const {handleType} = this.state;
+        if (handleType == 'modify')
+            this.getData();
+    }
+
+    // componentWillReceiveProps(nextProps, nextContext) {
+    //     if (this.props.location.state.id != nextProps.location.state.id) {
+    //         this.setState({id: nextProps.location.state.id}, () => {
+    //             this.getData()
+    //         })
+    //     }
+    // }
+
+    componentWillReceiveProps(nextProps, nextContext) {
+        if (this.props.id != nextProps.id && nextProps.type == 'modify') {
+            this.setState({id: nextProps.id,editorIndex:null}, () => {
+                this.getData();
+            })
+        }
+
+        if (this.props.pId != nextProps.pId) {
+            this.setState({pId: nextProps.pId})
+        }
+        if (this.props.type != nextProps.type) {
+            this.setState({handleType: nextProps.type})
+        }
+
+        if (this.props.type != nextProps.type) {
+            this.setState({handleType: nextProps.type})
+        }
+    }
+
+    getData = () => {
+        this.setState({isLoading: true})
+        const {id} = this.state;
+        // post(`${CORE_URL}/gim6d/layer/get/${id}`, {}).then(data => {
+        post(`${CORE}/gim6d/layer/get/${id}`, {}).then(data => {
+            let project = data.data;
+            if(project.attribute&&project.attribute.length){
+                project.attribute.map(a=>{
+                    a.ruleData=this.renderRuleData(a)
+                })
+            }
+            this.setState({
+                isLoading: false,
+                name: project.name,
+                type: project.type,
+                pageBaseX: project.pageBaseX,
+                pageBaseY: project.pageBaseY,
+                blockSize: project.blockSize,
+                imageBaseSize: project.imageBaseSize,
+                imageMaxSize: project.imageMaxSize,
+                isSplit: project.isSplit,
+                isShirt: project.isShirt,
+                isGenerateLod: project.isGenerateLod,
+                lodLevel: project.lodLevel,
+                lodType: project.lodType,
+                isSpliceRepeatImage: project.isSpliceRepeatImage,
+                isGenerateShadow: project.isGenerateShadow,
+                data: project.attribute||[]
+            })
+        })
+    }
+
+    saveData = (param) => {
+        const {id, handleType,projectId} = this.state;
+        const {onGetTree} = this.props;
+        if (handleType == 'modify')
+            post(`${CORE}/gim6d/layer/update/${id}`, {...param,...{projectId}}).then(data => {
+                if (data.code != 200) {
+                    message.error(data.message)
+                    return;
+                }
+                if(onGetTree)
+                    onGetTree();
+                message.success(data.message)
+            })
+
+
+        if (handleType == 'add')
+            post(`${CORE}/gim6d/layer/add`, {...param, ...{categoryId: this.state.pId, projectId}}).then(data => {
+                if (data.code != 200) {
+                    message.error(data.message)
+                    return;
+                }
+                if(onGetTree)
+                    onGetTree();
+                message.success(data.message)
+            })
+    }
+
+
+    renderRuleData=(item)=>{
+        if(item.type=='string'){
+            const ruleData=[
+                {name: '别名', value:item.alias, key: 'alias', type: 'string'},
+                {name: '允许为空', value: item.enableNull, key: 'enableNull', type: 'boolean'}
+            ];
+            return ruleData
+        }
+
+        if(item.type=='boolean'){
+            const ruleData=[
+                {name: '别名', value: item.alias, key: 'alias', type: 'string'},
+                {name: '允许为空', value:item.enableNull, key: 'enableNull', type: 'boolean'},
+                {name: '默认值', value:item.defaultValue, key: 'defaultValue', type: 'string'},
+                {name: '长度', value:item.length, key: 'length', type: 'number'}
+            ];
+            return ruleData
+        }
+
+        if(item.type=='byte'){
+            const ruleData=[
+                {name: '别名', value:  item.alias, key: 'alias', type: 'string'},
+                {name: '允许为空', value: item.enableNull, key: 'enableNull', type: 'boolean'},
+                {name: '默认值', value: item.defaultValue, key: 'defaultValue', type: 'string'}
+            ];
+            return ruleData
+        }
+
+        if(item.type=='date'){
+            const ruleData=[
+                {name: '别名', value: item.alias, key: 'alias', type: 'string'},
+                {name: '允许为空', value: item.enableNull, key: 'enableNull', type: 'boolean'},
+                {name: '默认值', value: item.defaultValue, key: 'defaultValue', type: 'date'}
+            ];
+            return ruleData
+        }
+
+        if(item.type=='decimal'){
+            const ruleData=[
+                {name: '别名', value: item.alias, key: 'alias', type: 'string'},
+                {name: '允许为空', value: item.enableNull, key: 'enableNull', type: 'boolean'},
+                {name: '默认值', value: item.defaultValue, key: 'defaultValue', type: 'decimal'},
+                {name: '精度', value: item.precision, key: 'precision', type: 'decimal'}
+            ];
+            return ruleData
+        }
+
+        if(item.type=='double'){
+            const ruleData=[
+                {name: '别名', value: item.alias, key: 'alias', type: 'string'},
+                {name: '允许为空', value: item.enableNull, key: 'enableNull', type: 'boolean'},
+                {name: '默认值', value: item.defaultValue, key: 'defaultValue', type: 'decimal'},
+                {name: '精度', value: item.precision, key: 'precision', type: 'number'}
+            ];
+            return ruleData
+        }
+
+        if(item.type=='int16'){
+            const ruleData=[
+                {name: '别名', value: item.alias, key: 'alias', type: 'string'},
+                {name: '允许为空', value: item.enableNull, key: 'enableNull', type: 'boolean'},
+                {name: '默认值', value: item.defaultValue, key: 'defaultValue', type: 'decimal'}
+            ];
+            return ruleData
+        }
+
+        if(item.type=='int32'){
+            const ruleData=[
+                {name: '别名', value: item.alias, key: 'alias', type: 'string'},
+                {name: '允许为空', value: item.enableNull, key: 'enableNull', type: 'boolean'},
+                {name: '默认值', value: item.defaultValue, key: 'defaultValue', type: 'decimal'}
+            ];
+            return ruleData
+        }
+
+        if(item.type=='int64'){
+            const ruleData=[
+                {name: '别名', value: item.alias, key: 'alias', type: 'string'},
+                {name: '允许为空', value: item.enableNull, key: 'enableNull', type: 'boolean'},
+                {name: '默认值', value: item.defaultValue, key: 'defaultValue', type: 'decimal'}
+            ];
+            return ruleData
+        }
+
+        if(item.type=='single'){
+            const ruleData=[
+                {name: '别名', value: item.alias, key: 'alias', type: 'string'},
+                {name: '允许为空', value: item.enableNull, key: 'enableNull', type: 'boolean'},
+                {name: '默认值', value: item.defaultValue, key: 'defaultValue', type: 'decimal'},
+                {name: '精度', value:item.precision, key: 'precision', type: 'number'}
+            ];
+            return ruleData
+        }
+
+        if(item.type=='string'){
+            const ruleData=[
+                {name: '别名', value: item.alias, key: 'alias', type: 'string'},
+                {name: '允许为空', value: item.enableNull, key: 'enableNull', type: 'boolean'},
+                {name: '默认值', value: item.defaultValue, key: 'defaultValue', type: 'string'},
+                {name: '长度', value:item.length, key: 'length', type: 'number'}
+            ];
+            return ruleData
+        }
+
+        if(item.type=='blob'){
+            const ruleData=[
+                {name: '别名', value: item.alias, key: 'alias', type: 'string'},
+                {name: '允许为空', value: item.enableNull, key: 'enableNull', type: 'boolean'}
+            ];
+            return ruleData
+        }
+
+        if(item.type=='clob'){
+            const ruleData=[
+                {name: '别名', value: item.alias, key: 'alias', type: 'string'},
+                {name: '允许为空', value: item.enableNull, key: 'enableNull', type: 'boolean'}
+            ];
+            return ruleData
+        }
+
+        if(item.type=='geometry'){
+            const ruleData=[
+                {name: '别名', value: item.alias, key: 'alias', type: 'string'},
+                {name: '允许为空', value: item.enableNull, key: 'enableNull', type: 'boolean'}
+            ];
+            return ruleData
+        }
+    }
+
+
+    renderColumns = () => {
+        const columns = [
+            {
+                title: 'name',
+                dataIndex: 'name',
+                width: '30%',
+                render: (val, row, index) => {
+                    if (this.state.editorIndex == index) {
+                        return <InputC value={val} onChange={val => {
+                            this.changeTableName(val, index)
+                        }}/>
+                    } else {
+                        return <span>{val}</span>
+                    }
+                }
+            },
+            {
+                title: 'type',
+                dataIndex: 'type',
+                width: '30%',
+                render: (val, row, index) => {
+                    return <Select allowClear value={val} style={{width: 120}} onChange={val => {
+                        this.changeTableVal(val, index)
+                    }}>
+                        <Option value="int">布尔型</Option>
+                        <Option value="byte">字节型</Option>
+                        <Option value="date">日期型</Option>
+                        <Option value="decimal">decimal</Option>
+                        <Option value="double">double</Option>
+                        <Option value="int16">int16</Option>
+                        <Option value="int32">int32</Option>
+                        <Option value="int64">int64</Option>
+                        <Option value="single">single</Option>
+                        <Option value="string">string</Option>
+                        <Option value="blob">blob</Option>
+                        <Option value="clob">clob</Option>
+                        <Option value="geometry">geometry</Option>
+                    </Select>
+                }
+            },
+            {
+                title: 'handle',
+                dataIndex: 'handle',
+                width: '30%',
+                render: (val, row, index) => {
+                    return <Button type='danger' key={index} onClick={(e) => {
+                        this.delTable(e, index)
+                    }}>删除</Button>
+                }
+            }
+        ]
+        return columns;
+    }
+
+    renderDetailColumns = () => {
+        const columns = [
+            {
+                key: '1',
+                title: 'name',
+                dataIndex: 'name',
+                width: '50%'
+            },
+            {
+                key: '2',
+                title: 'value',
+                dataIndex: 'value',
+                width: '50%',
+                render: (val, row, index) => {
+                    if (this.state.detailEditorIndex == index) {
+                        const dataType = row.type;
+                        switch (dataType) {
+                            case 'string':
+                                return <InputC defaultValue={val} onChange={val => {
+                                    this.changeDetailVal(val, index)
+                                }}/>
+                            case 'number':
+                                return <NumberInput value={val} onChange={val => {
+                                    this.changeDetailVal(val, index)
+                                }}/>
+                            case 'boolean':
+                                return <Select style={{width: 130}} value={val===0||val===1?val:null} onChange={val => {
+                                    this.changeDetailVal(val, index)
+                                }}>
+                                    <Option value={1}>是</Option>
+                                    <Option value={0}>否</Option>
+                                </Select>
+                            case 'date':
+                                return <DatePicker showTime  value={val ? moment(val, 'YYYY-MM-DD HH:mm') : null}
+                                                   onChange={((val, date) => {
+                                                       this.changeDetailVal(date, index)
+                                                   })}/>
+                            case 'decimal':
+                                return <NumberInput
+                                    precision={6}
+                                    value={val}
+                                    onChange={val => {
+                                        this.changeDetailVal(val, index)
+                                    }}/>
+                            default:
+                                return <InputC value={val} onChange={val => {
+                                    this.changeDetailVal(val, index)
+                                }}/>
+                        }
+                    } else {
+                        const dataType = row.type;
+                        if(dataType=='boolean')
+                            return <span>{val===1?'是':val===0?'否':''}</span>
+
+                        return <span>{val}</span>
+                    }
+                }
+            }
+        ]
+        return columns;
+    }
+
+    renderDetailData = (type) => {
+
+        const {detailType, editorIndex, data} = this.state;
+        if (type == 'rowClick') {
+            if (data[editorIndex].ruleData.length) {
+                return;
+            }
+        }
+        const booleanData = [
+            {name: '别名', value: '', key: 'alias', type: 'string'},
+            {name: '允许为空', value: '', key: 'enableNull', type: 'boolean'},
+            {name: '默认值', value: '', key: 'defaultValue', type: 'string'},
+            {name: '长度', value: '', key: 'length', type: 'number'}
+        ]
+
+        const byteData = [
+            {name: '别名', value: '', key: 'alias', type: 'string'},
+            {name: '允许为空', value: '', key: 'enableNull', type: 'boolean'},
+            {name: '默认值', value: '', key: 'defaultValue', type: 'string'}
+        ]
+
+        const dateData = [
+            {name: '别名', value: '', key: 'alias', type: 'string'},
+            {name: '允许为空', value: '', key: 'enableNull', type: 'boolean'},
+            {name: '默认值', value: '', key: 'defaultValue', type: 'date'}
+        ]
+
+        const decimalData = [
+            {name: '别名', value: '', key: 'alias', type: 'string'},
+            {name: '允许为空', value: '', key: 'enableNull', type: 'boolean'},
+            {name: '默认值', value: '', key: 'defaultValue', type: 'decimal'},
+            {name: '精度', value: '', key: 'precision', type: 'decimal'}
+        ]
+
+        const doubleData = [
+            {name: '别名', value: '', key: 'alias', type: 'string'},
+            {name: '允许为空', value: '', key: 'enableNull', type: 'boolean'},
+            {name: '默认值', value: '', key: 'defaultValue', type: 'decimal'},
+            {name: '精度', value: '', key: 'precision', type: 'number'}
+        ]
+
+        const int16Data = [
+            {name: '别名', value: '', key: 'alias', type: 'string'},
+            {name: '允许为空', value: '', key: 'enableNull', type: 'boolean'},
+            {name: '默认值', value: '', key: 'defaultValue', type: 'number'}
+        ]
+
+        const int32Data = [
+            {name: '别名', value: '', key: 'alias', type: 'string'},
+            {name: '允许为空', value: '', key: 'enableNull', type: 'boolean'},
+            {name: '默认值', value: '', key: 'defaultValue', type: 'number'}
+        ]
+
+        const int64Data = [
+            {name: '别名', value: '', key: 'alias', type: 'string'},
+            {name: '允许为空', value: '', key: 'enableNull', type: 'boolean'},
+            {name: '默认值', value: '', key: 'defaultValue', type: 'number'}
+        ]
+
+        const singleData = [
+            {name: '别名', value: '', key: 'alias', type: 'string'},
+            {name: '允许为空', value: '', key: 'enableNull', type: 'boolean'},
+            {name: '默认值', value: '', key: 'defaultValue', type: 'decimal'},
+            {name: '精度', value: '', key: 'precision', type: 'number'}
+        ]
+
+        const stringData = [
+            {name: '别名', value: '', key: 'alias', type: 'string'},
+            {name: '允许为空', value: '', key: 'enableNull', type: 'boolean'},
+            {name: '默认值', value: '', key: 'defaultValue', type: 'string'},
+            {name: '长度', value: '', key: 'length', type: 'number'}
+        ]
+
+        const blobData = [
+            {name: '别名', value: '', key: 'alias', type: 'string'},
+            {name: '允许为空', value: '', key: 'enableNull', type: 'boolean'}
+        ]
+
+        const clobData = [
+            {name: '别名', value: '', key: 'alias', type: 'string'},
+            {name: '允许为空', value: '', key: 'enableNull', type: 'boolean'}
+        ]
+
+        const geometryData = [
+            {name: '别名', value: '', key: 'alias', type: 'string'},
+            {name: '允许为空', value: '', key: 'enableNull', type: 'boolean'}
+        ]
+
+        // if(data[editorIndex].ruleData.length){
+        //     return;
+        // }
+        if (detailType == 'boolean') {
+            data[editorIndex].ruleData = booleanData
+            this.setState({data: data})
+        } else if (detailType == 'byte') {
+            data[editorIndex].ruleData = byteData
+            this.setState({data: data})
+        } else if (detailType == 'date') {
+            data[editorIndex].ruleData = dateData
+            this.setState({data: data})
+        } else if (detailType == 'decimal') {
+            data[editorIndex].ruleData = decimalData
+            this.setState({data: data})
+        } else if (detailType == 'double') {
+            data[editorIndex].ruleData = doubleData
+            this.setState({data: data})
+        } else if (detailType == 'int16') {
+            data[editorIndex].ruleData = int16Data
+            this.setState({data: data})
+        } else if (detailType == 'int32') {
+            data[editorIndex].ruleData = int32Data
+            this.setState({data: data})
+        } else if (detailType == 'int64') {
+            data[editorIndex].ruleData = int64Data
+            this.setState({data: data})
+        } else if (detailType == 'single') {
+            data[editorIndex].ruleData = singleData
+            this.setState({data: data})
+        }else if (detailType == 'string') {
+            data[editorIndex].ruleData = stringData
+            this.setState({data: data})
+        }else if (detailType == 'blob') {
+            data[editorIndex].ruleData = blobData
+            this.setState({data: data})
+        }else if (detailType == 'clob') {
+            data[editorIndex].ruleData = clobData
+            this.setState({data: data})
+        }else if (detailType == 'geometry') {
+            data[editorIndex].ruleData = geometryData
+            this.setState({data: data})
+        }
+
+        if (editorIndex == null || editorIndex == undefined) {
+            this.setState({ruleData: []})
+        }
+    }
+
+
+    onRowClick = (row, index) => {
+        this.setState({editorIndex: index, detailType: row.type}, () => {
+            this.renderDetailData('rowClick');
+        })
+        if (row.type && row.name) {
+            this.setState({isShowDetail: true})
+        }
+    }
+
+    onDetailRowClick = (row, index) => {
+        this.setState({detailEditorIndex: index})
+    }
+
+    changeTableName = (val, index) => {
+        const {data} = this.state;
+        if (data[index].type && val)
+            this.setState({isShowDetail: true})
+        else
+            this.setState({isShowDetail: false})
+        data[index].name = val;
+        this.setState({data: data})
+    }
+
+    changeTableVal = (val, index) => {
+        const {data} = this.state;
+        if (data[index].name && val)
+            this.setState({isShowDetail: true})
+        else
+            this.setState({isShowDetail: false})
+        data[index].type = val;
+        this.setState({data: data, detailType: val}, () => {
+            this.renderDetailData('1');
+        })
+    }
+
+    changeDetailVal = (val, index) => {
+        const {data, editorIndex} = this.state;
+        data[editorIndex].ruleData[index].value = val;
+        this.setState({data: data})
+    }
+
+    addTable = () => {
+        const {data} = this.state;
+        let addObj = {
+            name: '',
+            type: 'boolean',
+            ruleData: []
+        }
+        data.push(addObj);
+        this.setState({data})
+    }
+
+    delTable = (e, i) => {
+        e.stopPropagation();
+        const {data, editorIndex} = this.state;
+        if (editorIndex == i) {
+            this.setState({editorIndex: null})
+        }
+        data.splice(i, 1)
+        this.setState({data})
+    }
+
+    save = () => {
+        const {
+            name, type, pageBaseX, pageBaseY, blockSize, imageBaseSize, imageMaxSize, isSplit,
+            isShirt, isGenerateLod, lodLevel, lodType, isSpliceRepeatImage, isGenerateShadow, data
+        } = this.state;
+        let attribute = [];
+        if (data&&data.length)
+            data.map(d => {
+                let o = {};
+                o.name = d.name;
+                o.type = d.type;
+                if (d.ruleData.length) {
+                    d.ruleData.map(r => {
+                        o[r.key] = r.value;
+                    })
+                }
+                attribute.push(o)
+            })
+        if (!name) {
+            message.error('请输入名称');
+            return;
+        }
+        this.saveData({
+            name,
+            type,
+            pageBaseX,
+            pageBaseY,
+            blockSize,
+            imageBaseSize,
+            imageMaxSize,
+            isSplit,
+            isShirt,
+            isGenerateLod,
+            lodLevel,
+            lodType,
+            isSpliceRepeatImage,
+            isGenerateShadow,
+            attribute
+        })
+    }
+
+    changeCategory = val => {
+        console.log(val)
+    }
+
+
+    render() {
+        const {
+            isLoading,
+            data, editorIndex, type, pageBaseX, pageBaseY, blockSize, imageBaseSize, imageMaxSize,
+            isSplit, isShirt, isGenerateLod, lodLevel, lodType, isSpliceRepeatImage, isGenerateShadow
+        } = this.state;
+        if (isLoading)
+            return (<Loading/>)
+        return (<div className='class-wrapper'>
+            <h3 className='class-title'>要素类</h3>
+            <div className='class-list'>
+                <h6 className='class-list-title'>
+                    常规
+                </h6>
+                <div className='class-list-item'>
+                    <div className='class-list-content'>
+                        <Label>名称:</Label>
+                        <InputC
+                            value={this.state.name}
+                            onChange={val => {
+                                this.setState({name: val})
+                            }}/>
+                    </div>
+
+                    <div className='class-list-content'>
+                        <Label>类别:</Label>
+                        <Select style={{width: 140}} allowClear value={type} onChange={val => {
+                            this.setState({type: val})
+                        }}>
+                            <Option value={0}>简单要素类</Option>
+                            <Option value={1}>点</Option>
+                            <Option value={2}>线</Option>
+                            <Option value={3}>多边形</Option>
+                            <Option value={4}>多点</Option>
+                            <Option value={5}>多线</Option>
+                            <Option value={6}>多多边形</Option>
+                            <Option value={7}>多图元</Option>
+                            <Option value={10}>弧线</Option>
+                            <Option value={11}>弧面</Option>
+                            <Option value={12}>多弧线</Option>
+                            <Option value={13}>多弧面</Option>
+                            <Option value={14}>三维要素类</Option>
+                            <Option value={15}>三维分页模型</Option>
+                            <Option value={16}>三维影像</Option>
+                            <Option value={17}>三维管点</Option>
+                            <Option value={18}>三维管线</Option>
+                        </Select>
+                    </div>
+                </div>
+
+
+            </div>
+
+            <div className='class-list'>
+                <h6 className='class-list-title'>
+                    字段
+                </h6>
+                <div className='class-list-item'>
+                    <Button type="primary" onClick={this.addTable}>
+                        添加
+                    </Button>
+                </div>
+                <div className='class-list-item'>
+                    <Table
+                        scroll={{ y: 240 }}
+                        style={{width: '100%'}}
+                        dataSource={data}
+                        columns={this.renderColumns()}
+                        pagination={false}
+                        onRowClick={(row, info) => {
+                            this.onRowClick(row, info)
+                        }}
+                    />
+                </div>
+                <div className='class-list-item'>
+                    {this.state.isShowDetail && data.length ? <Table
+                        style={{width: '100%'}}
+                        dataSource={editorIndex != null && data ? data[editorIndex].ruleData : []}
+                        columns={this.renderDetailColumns()}
+                        pagination={false}
+                        onRowClick={(row, info) => {
+                            this.onDetailRowClick(row, info)
+                        }}
+                    /> : null}
+                </div>
+
+            </div>
+
+            <div className='class-list' style={{flex: 1}}>
+                <h6 className='class-list-title'>
+                    分页信息
+                </h6>
+                <div className='class-list-item'>
+                    <div className='class-list-content'>
+                        <Label align='left'>分页基点X:</Label>
+                        <NumberInput precision={6} value={pageBaseX} onChange={val => {
+                            this.setState({pageBaseX: val})
+                        }}/>
+                    </div>
+
+                    <div className='class-list-content'>
+                        <Label align='left'>分页基点Y:</Label>
+                        <NumberInput precision={6} value={pageBaseY} onChange={val => {
+                            this.setState({pageBaseY: val})
+                        }}/>
+                    </div>
+
+                    <div className='class-list-content'>
+                        <Label align='left'>块大小:</Label>
+                        <NumberInput precision={6} value={blockSize} onChange={val => {
+                            this.setState({blockSize: val})
+                        }}/>
+                    </div>
+                </div>
+
+                <div className='class-list-item'>
+                    <div className='class-list-content'>
+                        <Label align='left' width={160}>质检图片的基础大小:</Label>
+                        <Select style={{width: 140}} allowClear value={imageBaseSize} onChange={val => {
+                            this.setState({imageBaseSize: val})
+                        }}>
+                            <Option value={64}>64*64</Option>
+                            <Option value={128}>128*128</Option>
+                            <Option value={256}>256*256</Option>
+                            <Option value={512}>512*512</Option>
+                            <Option value={1024}>1024*1024</Option>
+                        </Select>
+                    </div>
+
+                    <div className='class-list-content'>
+                        <Label align='left' width={160}>质检图片的最大大小:</Label>
+                        <Select style={{width: 140}} allowClear value={imageMaxSize} onChange={val => {
+                            this.setState({imageMaxSize: val})
+                        }}>
+                            <Option value={64}>64*64</Option>
+                            <Option value={128}>128*128</Option>
+                            <Option value={256}>256*256</Option>
+                            <Option value={512}>512*512</Option>
+                            <Option value={1024}>1024*1024</Option>
+                        </Select>
+                    </div>
+                </div>
+
+                <div className='class-list-item'>
+                    <Checkbox
+                        style={checkLabel}
+                        checked={isSplit}
+                        onChange={e => {
+                            this.setState({isSplit: e.target.checked ? 1 : 0})
+                        }}
+                    >是否切割</Checkbox>
+                    <Checkbox
+                        style={checkStyle}
+                        onChange={e => {
+                            this.setState({isShirt: e.target.checked ? 1 : 0})
+                        }}
+                        disabled={!isSplit}
+                        checked={isSplit && isShirt}
+                    >是否加裙边</Checkbox>
+                </div>
+
+                <div className='class-list-item'>
+                    <Checkbox
+                        style={checkLabel}
+                        checked={isGenerateLod}
+                        onChange={e => {
+                            this.setState({isGenerateLod: e.target.checked ? 1 : 0,lodLevel:null,lodType:null})
+                        }}>产生3级LOD</Checkbox>
+
+                    <Radio.Group
+                        name="LodType"
+                        value={lodLevel}
+                        onChange={e => {
+                            this.setState({lodLevel: e.target.value})
+                        }}>
+                        <Radio style={radioStyle} value={0} disabled={!isGenerateLod}>0级</Radio>
+                        <Radio style={radioStyle} value={1} disabled={!isGenerateLod}>1级</Radio>
+                        <Radio style={radioStyle} value={2} disabled={!isGenerateLod}>2级</Radio>
+                    </Radio.Group>
+                </div>
+                <div className='class-list-item'>
+                    <Radio.Group
+                        name="radiogroup"
+                        value={lodType}
+                        onChange={e => {
+                            this.setState({lodType: e.target.value})
+                        }}>
+                        <Radio style={{marginLeft: 178, width: 100}} value={1}
+                               disabled={!isGenerateLod}>2级LOD</Radio>
+                        <Radio style={radioStyle} value={2} disabled={!isGenerateLod}>模型分离</Radio>
+                        <Radio style={radioStyle} value={3} disabled={!isGenerateLod}>3级LOD</Radio>
+                        <Radio style={radioStyle} value={4} disabled={!isGenerateLod}>实例化LOD</Radio>
+                    </Radio.Group>
+                </div>
+
+                <div className='class-list-item'>
+                    <Checkbox
+                        style={checkLabel}
+                        checked={isSpliceRepeatImage}
+                        onChange={e => {
+                            this.setState({isSpliceRepeatImage: e.target.checked ? 1 : 0})
+                        }}
+                    >重新贴图拼接</Checkbox>
+                    <Checkbox
+                        style={checkStyle}
+                        checked={isGenerateShadow}
+                        onChange={e => {
+                            this.setState({isGenerateShadow: e.target.checked ? 1 : 0})
+                        }}
+                    >产生阴影</Checkbox>
+                </div>
+
+                <div className='class-btn'>
+                    <Button type="primary" onClick={this.save}>保存</Button>
+                </div>
+            </div>
+        </div>)
+    }
+}

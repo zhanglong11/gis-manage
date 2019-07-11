@@ -1,0 +1,44 @@
+//@import "../../less/common";
+//
+//@classPrefixCls: class;
+//
+//.@{classPrefixCls} {
+//  &-wrapper {
+//    height: 100%;
+//    overflow: auto;
+//  }
+//
+//  &-title {
+//    padding:10px;
+//    color:#fff;
+//    background: @main_color;
+//    font-size: 20px;
+//    font-weight: 600;
+//  }
+//
+//  &-list{
+//    padding:10px 10px 30px 10px;
+//    margin-bottom: 20px;
+//    background: #fff;
+//    &-title{
+//      border-left: 4px solid @main_color;
+//      padding:0 10px;
+//      font-size: 18px;
+//      font-weight: 500;
+//    }
+//    &-item{
+//      display: flex;
+//      padding-left: 100px;
+//      margin-bottom: 10px;
+//    }
+//    &-content{
+//      display: flex;
+//      align-items: center;
+//      margin-left: 20px;
+//    }
+//  }
+//  &-btn{
+//    margin-top: 40px;
+//    text-align: center;
+//  }
+//}

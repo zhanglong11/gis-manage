@@ -1,0 +1,20 @@
+@projectPrefixCls:project;
+.@{projectPrefixCls}{
+  &-wrapper{
+    padding:20px;
+  }
+  &-card{
+    height: 100px;
+    text-align: center;
+    cursor:pointer;
+    &:hover{
+      color:#0079FC;
+    }
+  }
+  &-item{
+    display: flex;
+    flex-direction: column;
+    justify-content: center;
+    align-items: center;
+  }
+}

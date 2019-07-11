@@ -1,0 +1,38 @@
+self.__precacheManifest = (self.__precacheManifest || []).concat([
+  {
+    "revision": "504e5ddc85dd10b2ae759e0559936eae",
+    "url": "./index.html"
+  },
+  {
+    "revision": "64ee1f7b5c4aa3fcd178",
+    "url": "./static/css/2.602ea4ad.chunk.css"
+  },
+  {
+    "revision": "dc3ee302dfb813c885af",
+    "url": "./static/css/main.c3411a6f.chunk.css"
+  },
+  {
+    "revision": "64ee1f7b5c4aa3fcd178",
+    "url": "./static/js/2.29142ad7.chunk.js"
+  },
+  {
+    "revision": "dc3ee302dfb813c885af",
+    "url": "./static/js/main.597a18f6.chunk.js"
+  },
+  {
+    "revision": "8c97409f0ee389fe75da",
+    "url": "./static/js/runtime~main.d653cc00.js"
+  },
+  {
+    "revision": "ed7860d8bae48bca1f67e671b3aa1627",
+    "url": "./static/media/loader.ed7860d8.svg"
+  },
+  {
+    "revision": "b2ca59acb375ed7bd51e9c7892dc62df",
+    "url": "./static/media/login-back.b2ca59ac.png"
+  },
+  {
+    "revision": "13bbb0751141aae6b67a57e8847ae691",
+    "url": "./static/media/login-logo.13bbb075.png"
+  }
+]);

@@ -1,0 +1,142 @@
+import React, {Component} from 'react';
+import {Layout, Tree, Button, Checkbox, Modal,Icon} from 'antd';
+import AddOne from '../AddOne'
+import AddFolder from '../AddFolder'
+import {connect} from "react-redux";
+import './style.less'
+import {post} from "@Fetch";
+import {CORE} from "@Config/http";
+
+const {TreeNode} = Tree;
+
+const {Content, Sider} = Layout;
+
+
+class Main extends Component {
+    state = {
+        treeData: [],
+        id: null,
+        pId: 0,
+        key: 'folder',
+        addFolder: false,
+        defaultId: null,
+        projectId:'',
+        SelectedKeys:[]
+    }
+
+    componentDidMount() {
+        const projectId=localStorage.getItem('projectId');
+        this.setState({projectId:projectId||''},()=>{
+            this.getData();
+        })
+
+    }
+
+    getData = (type) => {
+        const {projectId,SelectedKeys}=this.state;
+        this.setState({treeData: []});
+        post(`${CORE}/bim/modelCategory/${projectId}/tree`, {}).then(data => {
+            if (data.code == 200) {
+                this.setState({treeData: data.data,SelectedKeys:type=='add'?[]:SelectedKeys})
+            }
+        })
+    }
+    selectTree = (selectedKeys, info) => {
+        const {isModel, id} = info.node.props.dataRef;
+        if (selectedKeys.length) {
+            if (!isModel) {
+                this.setState({isFolder: true, id, key: 'folder', type: 'modify', pId: id,SelectedKeys:[id]})
+            } else {
+                this.setState({isFolder: false, id, key: 'one', type: 'modify', pId: id,SelectedKeys:[id]})
+            }
+        } else {
+            this.setState({isFolder: null, id:null, key: 'folder', type: null, pId: 0})
+        }
+    }
+
+    add = () => {
+        const {pId, addFolder, isFolder} = this.state;
+        if (isFolder==false) {
+            Modal.warning({
+                title: '提示',
+                content: '当前目录下不能新建'
+            });
+            return;
+        }
+
+        if (!addFolder && !pId) {
+            Modal.warning({
+                title: '提示',
+                content: '当前目录下不能新建单体'
+            });
+            return;
+        }
+
+        if (addFolder)
+            this.setState({type: 'add', key: 'folder', pId})
+        else
+            this.setState({type: 'add', key: 'one', pId})
+    }
+
+
+    renderTreeNodes = data =>
+        data.map(item => {
+            if (item.children) {
+                return (
+                    <TreeNode  icon={<Icon type={item.isModel?'api':'apartment'} />} title={item.name} key={item.id} dataRef={item}>
+                        {this.renderTreeNodes(item.children)}
+                    </TreeNode>
+                );
+            }
+            return <TreeNode icon={<Icon type={item.isModel?'api':'apartment'} />}  {...item} title={item.name} key={item.id} dataRef={item}/>;
+        });
+
+
+    render() {
+        const {treeData,SelectedKeys} = this.state;
+        return (
+            <Layout style={{height: '100%'}}>
+                <Sider theme='light'>
+                    <div className='main-logo-wrapper'><h1 className='main-logo'/></div>
+                    <div className='main-btn-wrapper'>
+                        <Button type="primary" style={{width: 100}} onClick={this.add}>新建</Button>
+                    </div>
+                    <div className='main-check-wrapper'>
+                        <Checkbox onChange={e => {
+                            this.setState({addFolder: e.target.checked})
+                        }}>新建文件夹</Checkbox>
+                    </div>
+                    {treeData.length ? <Tree
+                        defaultSelectedKeys={SelectedKeys}
+                        onSelect={this.selectTree}
+                        defaultExpandAll
+                        showIcon
+                    >
+                        {this.renderTreeNodes(treeData)}
+                    </Tree> : null}
+                </Sider>
+                <Content style={{padding: '0 16px', height: '100%', position: 'relative'}}>
+                    {this.state.key == 'folder' ? <AddFolder
+                        id={this.state.id}
+                        pId={this.state.pId}
+                        type={this.state.type}
+                        projectId={this.state.projectId}
+                        onGetTree={type=>{this.getData(type)}}
+                    /> : <AddOne
+                        id={this.state.id}
+                        pId={this.state.pId}
+                        type={this.state.type}
+                        projectId={this.state.projectId}
+                        onGetTree={type=>{this.getData(type)}}
+                    />}
+                </Content>
+            </Layout>
+        );
+    }
+}
+
+const mapStateToProps=state=>state
+
+
+export default connect(mapStateToProps)(Main)
+

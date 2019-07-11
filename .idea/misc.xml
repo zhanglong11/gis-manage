@@ -1,0 +1,22 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<project version="4">
+  <component name="JavaScriptSettings">
+    <option name="languageLevel" value="JSX" />
+  </component>
+  <component name="SvnBranchConfigurationManager">
+    <option name="myConfigurationMap">
+      <map>
+        <entry key="$PROJECT_DIR$">
+          <value>
+            <SvnBranchConfiguration>
+              <option name="trunkUrl" value="http://d-svnserver-69/svn/CIM6D/Back-Mgr" />
+            </SvnBranchConfiguration>
+          </value>
+        </entry>
+      </map>
+    </option>
+  </component>
+  <component name="WebPackConfiguration">
+    <option name="path" value="$PROJECT_DIR$/webstorm.js" />
+  </component>
+</project>

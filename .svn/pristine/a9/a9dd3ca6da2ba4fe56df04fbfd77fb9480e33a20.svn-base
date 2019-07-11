@@ -1,0 +1,32 @@
+import React, {Component} from 'react';
+import {Icon, Card, Button, message} from 'antd';
+
+
+export default class MenuChoose extends Component {
+    changeMenu = (type) => {
+        this.props.history.push({
+            pathname: `/${type}project`
+        })
+    }
+
+    render() {
+        return (
+            <div>
+                <Card>
+                    <Card.Grid className='project-card' style={{width: '25%'}} onClick={()=>{this.changeMenu('bim')}}>
+                        <div className='project-item'>
+                            <Icon type="home" style={{fontSize: 24}}/>
+                            <span>BIM</span>
+                        </div>
+                    </Card.Grid>
+                    <Card.Grid className='project-card' style={{width: '25%'}} onClick={()=>{this.changeMenu('gis')}}>
+                        <div className='project-item'>
+                            <Icon type="home" style={{fontSize: 24}}/>
+                            <span>GIS</span>
+                        </div>
+                    </Card.Grid>
+                </Card>
+            </div>
+        );
+    }
+}

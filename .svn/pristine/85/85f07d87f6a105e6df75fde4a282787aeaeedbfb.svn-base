@@ -1,0 +1,3 @@
+export const SYSTEM_URL='/bim6d-system';
+export const CORE_URL='/gim6d-core';
+export const CORE='/gim6d-core';

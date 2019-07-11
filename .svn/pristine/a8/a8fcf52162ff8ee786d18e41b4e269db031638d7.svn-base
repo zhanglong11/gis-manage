@@ -1,0 +1,226 @@
+import React, {Component} from 'react';
+import {Icon, Card, Button, message} from 'antd';
+import {connect} from "react-redux";
+import {post} from "@Fetch";
+import {CORE} from '@Config/http'
+import Modal from "antd/es/modal/Modal";
+import Label from '@Components/Label'
+import {InputC} from '@Components/Form'
+import {ImgUpload} from '@Components/UploadComponent';
+import {setProjectId} from '@Store/projectChoose/actions'
+
+const {Meta} = Card;
+const confirm = Modal.confirm;
+
+class Project extends Component {
+
+    state = {
+        projectData: [],
+        visible: false,
+        name: '',
+        modalTitle: '添加项目',
+        iconFileId: '',
+        handleType: 'add',
+        type: 2,
+        projectId: ''
+    }
+
+    componentDidMount() {
+        this.getData()
+    }
+
+    getData = () => {
+        const {type} = this.state;
+        post(`${CORE}/gim6d/layerProject/list`, {type}).then(data => {
+            if (data.code == 200) {
+                this.setState({
+                    projectData: data.data.records
+                })
+            }
+        })
+    }
+
+    addData = () => {
+        const {name, iconFileUrl, type} = this.state;
+        post(`${CORE}/gim6d/layerProject/add`, {name, iconFileUrl, type}).then(data => {
+            if (data.code != 200) {
+                message.error(data.message);
+                return;
+            }
+            message.success(data.message)
+            this.setState({visible: false})
+            this.getData();
+        })
+    }
+    modifyData = () => {
+        const {projectId, name, iconFileUrl, type} = this.state;
+        post(`${CORE}/gim6d/layerProject/update/${projectId}`, {name, type,iconFileUrl}).then(data => {
+            if (data.code != 200) {
+                message.error(data.message);
+                return;
+            }
+            message.success(data.message)
+            this.setState({visible: false})
+            this.getData();
+        })
+    }
+    delData = (id) => {
+        post(`${CORE}/gim6d/layerProject/delete/${id}`, {}).then(data => {
+            if (data.code != 200) {
+                message.error(data.message);
+                return;
+            }
+            message.success(data.message)
+            this.setState({visible: false})
+            this.getData();
+        })
+    }
+
+    choosePro = (id) => {
+        localStorage.setItem('projectId', id);
+        const {setProject} = this.props;
+        setProject(id);
+        this.props.history.push('/bim')
+    }
+
+
+    renderProject = () => {
+        const {projectData} = this.state;
+        return projectData.map(d => (
+            <Card
+                hoverable
+                style={{width:200,margin:10}}
+                onClick={() => this.choosePro(d.id)}
+                cover={
+                    <img
+                        src={d.iconFileUrl}
+                        style={{width:200,height:130}}
+                    />
+                }
+
+                actions={[<div onClick={(e) => {
+                    this.showModifyModal(e, d)
+                }}><Icon type="edit"/></div>, <div onClick={(e) => {
+                    this.delProject(e, d)
+                }}><Icon type="delete"/></div>]}
+            >
+                <Meta title={d.name}/>
+            </Card>
+        ))
+    }
+
+    delProject = (e, d) => {
+        e.stopPropagation();
+        confirm({
+            title: '警告',
+            content: '确认删除?',
+            okType: 'danger',
+            onOk:()=>{
+                this.delData(d.id)
+            }
+        });
+    }
+
+    showModifyModal = (e, d) => {
+        e.stopPropagation()
+        this.setState({
+            visible: true,
+            handleType: 'modify',
+            modalTitle: d.name,
+            name: d.name,
+            projectId: d.id,
+            iconFileUrl: d.iconFileUrl
+        })
+    }
+
+    showAddModal = () => {
+        this.setState({
+            visible: true,
+            handleType: 'add',
+            name: '',
+            modalTitle: '添加项目',
+            iconFileUrl: ''
+        })
+    }
+
+
+    saveData=()=>{
+        const iconFileUrl=this.uploadComponent.getUrl();
+        console.log(iconFileUrl)
+        const {handleType,name} = this.state;
+        if(!iconFileUrl){
+            message.info('请上传项目图片');
+            return;
+        }
+        if(!name){
+            message.info('请填写项目名称');
+            return;
+        }
+        this.setState({
+            iconFileUrl
+        },()=>{
+            switch (handleType) {
+                case 'add':
+                    this.addData();
+                    return;
+                case 'modify':
+                    this.modifyData();
+                    return;
+                default:
+                    return;
+            }
+        })
+    }
+
+
+    closeModal = () => {
+        this.setState({
+            visible: false
+        })
+    }
+
+    render() {
+        return (
+            <div className='project-wrapper'>
+                <Button type='primary' onClick={this.showAddModal}>
+                    添加
+                </Button>
+                <div className='project-content'>
+                    {this.renderProject()}
+                </div>
+
+                <Modal
+                    title={this.state.modalTitle}
+                    visible={this.state.visible}
+                    onOk={this.saveData}
+                    onCancel={this.closeModal}
+                    destroyOnClose
+                >
+                    <div className='class-list-content'>
+                        <Label>名称:</Label>
+                        <InputC
+                            precision={6}
+                            value={this.state.name}
+                            onChange={val => {
+                                this.setState({name: val})
+                            }}/>
+                    </div>
+                    <div className='class-list-content' style={{marginTop: 10}}>
+                        <Label>图片:</Label>
+                        <ImgUpload  onRef={e => this.uploadComponent = e} fileUrl={this.state.iconFileUrl}/>
+                    </div>
+                </Modal>
+            </div>
+        );
+    }
+}
+
+const mapStateToProps = (state) => state
+
+const mapDispatchToProps = dispatch => {
+    return {
+        setProject: projectId => dispatch(setProjectId(projectId))
+    }
+}
+
+export default connect(mapStateToProps, mapDispatchToProps)(Project)

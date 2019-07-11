@@ -1,0 +1,122 @@
+import React, {Component} from "react";
+import {Button, Input, Tooltip, Icon, Checkbox, message} from 'antd';
+import './style.less'
+import {SYSTEM_URL} from '../../config/http'
+let username = localStorage.getItem("gisName");
+let password = localStorage.getItem("gisPass");
+let isAuto = localStorage.getItem("isAuto");
+
+export default class Login extends Component {
+    state = {
+        username: '',
+        password: '',
+        isRemember: false,
+        isAuto: false
+    }
+
+    componentWillMount() {
+        if (password&&username)
+            this.setState({username,password,isRemember: true});
+        if (isAuto) {
+            this.props.history.push({
+                pathname: '/menu'
+            })
+        }
+    }
+
+    login = () => {
+        const {username, password, isRemember, isAuto} = this.state;
+        if (!username) {
+            message.warn('请输入账号');
+            return;
+        }
+        if (!password) {
+            message.warn('请输入密码');
+            return;
+        }
+        if (isAuto)
+            localStorage.setItem('isLogin', '1');
+        fetch(`${SYSTEM_URL}/login/login`, {
+            method: 'POST',
+            headers: {'Content-Type': 'application/json'},
+            body: JSON.stringify({username, password})
+        }).then(data => data.json()).then(data => {
+            if (data.code !== 200) {
+                message.error(data.message);
+                return;
+            }
+            //记住密码
+            if (isRemember)
+            {
+                localStorage.setItem('gisName', username);
+                localStorage.setItem('gisPass', password);
+            } else{
+                localStorage.removeItem('gisName');
+                localStorage.removeItem('gisPass');
+            }
+
+            //自动登录
+            if (isAuto)
+                localStorage.setItem('isAuto', data.data);
+            else
+                localStorage.removeItem('isAuto');
+            message.success(data.message);
+            this.props.history.push({
+                pathname: '/menu'
+            })
+            localStorage.setItem('token', data.data);
+        })
+
+    }
+
+    render() {
+        return (<div className='login-body'>
+            <div className='login-wrapper'>
+                <h1 className='login-logo'/>
+                <div className='login-form'>
+                    <div className='login-title'>登录</div>
+                    <div className='login-form-content'>
+                        <Input
+                            placeholder="用户名"
+                            suffix={
+                                <Tooltip title="Extra information">
+                                    <Icon type="user" style={{color: 'rgba(0,0,0,.45)'}}/>
+                                </Tooltip>
+                            }
+                            style={{marginTop: 10}}
+                            size="large"
+                            onChange={e => {
+                                this.setState({username: e.target.value})
+                            }}
+                            value={this.state.username}
+                        />
+                        <Input.Password
+                            placeholder="密码"
+                            suffix={
+                                <Tooltip title="Extra information">
+                                    <Icon type="user" style={{color: 'rgba(0,0,0,.45)'}}/>
+                                </Tooltip>
+                            }
+                            style={{marginTop: 10}}
+                            size="large"
+                            onChange={e => {
+                                this.setState({password: e.target.value})
+                            }}
+                            value={this.state.password}
+                        />
+                        <div className='login-form-choose'>
+                            <Checkbox checked={this.state.isRemember} onChange={e => {
+                                this.setState({isRemember: e.target.checked})
+                            }}>记住密码</Checkbox>
+                            <Checkbox checked={this.state.isAuto} onChange={e => {
+                                this.setState({isAuto: e.target.checked})
+                            }}>自动登录</Checkbox>
+                        </div>
+                    </div>
+
+                    <Button type="primary" size='large' className='login-btn' onClick={this.login}>登录</Button>
+                </div>
+            </div>
+        </div>)
+    }
+}

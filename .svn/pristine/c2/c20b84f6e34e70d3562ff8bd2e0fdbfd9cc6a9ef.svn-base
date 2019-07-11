@@ -1,0 +1,134 @@
+import React, {Component} from 'react';
+import {Layout, Tree, Button, Checkbox, Modal} from 'antd';
+import ElementClass from '../ElementClass'
+import ElementSet from '../ElementSet'
+import {post} from "../../../fetch";
+import {CORE_URL, CORE} from '../../../config/http'
+import './style.less'
+
+const {TreeNode} = Tree;
+
+const {Content, Sider} = Layout;
+
+
+class Main extends Component {
+
+    state = {
+        treeData: [],
+        id: null,
+        pId: 0,
+        key: 'set',
+        addClass: false,
+        defaultId: null,
+        projectId: this.props.location.state ? this.props.location.state.projectId : null
+    }
+
+    componentDidMount() {
+        this.getData();
+    }
+
+    getData = () => {
+        const {projectId} = this.state;
+        this.setState({treeData: []});
+        post(`${CORE}/gim6d/layerCategory/${projectId}/tree`, {}).then(data => {
+            if (data.code == 200) {
+                this.setState({treeData: data.data})
+            }
+        })
+    }
+
+    selectTree = (selectedKeys, info) => {
+        const {isLayer, id} = info.node.props.dataRef;
+        if (selectedKeys.length) {
+            if (isLayer) {
+                this.setState({isLayer: true, id, key: 'class', type: 'modify', pId: id})
+            } else {
+                this.setState({isLayer: false, id, key: 'set', type: 'modify', pId: id})
+            }
+        }else{
+            this.setState({pId: 0,isLayer:false})
+        }
+    }
+
+    add = () => {
+        const {pId, addClass, isLayer} = this.state;
+
+        if (isLayer) {
+            Modal.warning({
+                title: '提示',
+                content: '当前目录下不能新建'
+            });
+            return;
+        }
+
+        if (addClass && !pId) {
+            Modal.warning({
+                title: '提示',
+                content: '当前目录下不能新建要素类'
+            });
+            return;
+        }
+
+        if (addClass)
+            this.setState({type: 'add', key: 'class', pId})
+        else
+            this.setState({type: 'add', key: 'set', pId})
+    }
+
+    renderTreeNodes = data =>
+        data.map(item => {
+            if (item.children) {
+                return (
+                    <TreeNode title={item.name} key={item.key} dataRef={item}>
+                        {this.renderTreeNodes(item.children)}
+                    </TreeNode>
+                );
+            }
+            return <TreeNode {...item} title={item.name} dataRef={item}/>;
+        });
+
+    modify = (e) => {
+        console.log(e.node.props)
+    }
+
+    render() {
+        const {treeData, defaultId} = this.state;
+        return (
+            <Layout style={{height: '100%'}}>
+                <Sider theme='light'>
+                    <div className='main-logo-wrapper'><h1 className='main-logo'/></div>
+                    <div className='main-btn-wrapper'>
+                        <Button type="primary" style={{width: 100}} onClick={this.add}>新建</Button>
+                    </div>
+                    <div className='main-check-wrapper'>
+                        <Checkbox onChange={e => {
+                            this.setState({addClass: e.target.checked})
+                        }}>新建要素类</Checkbox>
+                    </div>
+                    {treeData.length ?
+                        <Tree showLine onSelect={this.selectTree} onRightClick={this.modify} defaultExpandAll>
+                            {this.renderTreeNodes(treeData)}
+                        </Tree> : null}
+                </Sider>
+                <Content style={{padding: '0 16px', height: '100%', position: 'relative'}}>
+                    {this.state.key == 'class' ? <ElementClass
+                        id={this.state.id}
+                        pId={this.state.pId}
+                        type={this.state.type}
+                        projectId={this.state.projectId}
+                        onGetTree={this.getData}
+                    /> : <ElementSet
+                        id={this.state.id}
+                        pId={this.state.pId}
+                        type={this.state.type}
+                        projectId={this.state.projectId}
+                        onGetTree={this.getData}
+                    />}
+                </Content>
+            </Layout>
+        );
+    }
+}
+
+export default Main
+

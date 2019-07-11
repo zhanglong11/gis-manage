@@ -1,0 +1,26 @@
+@mainPrefixCls:main;
+.@{mainPrefixCls}{
+
+  &-logo{
+    &-wrapper{
+      background:#0079FC;
+      padding:10px;
+    }
+    margin: 0 auto;
+    width:138px;
+    height:30px;
+    background: url("../../../assets/logoT.png");
+    background-size: cover;
+  }
+  &-btn-wrapper{
+    width:100%;
+    padding: 10px 0;
+    text-align: center;
+    border-bottom: 1px solid #eee;
+  }
+  &-check-wrapper{
+    width:100%;
+    padding-bottom: 10px;
+    text-align: right;
+  }
+}

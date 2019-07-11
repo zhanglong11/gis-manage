@@ -1,0 +1,122 @@
+import React, {Component} from 'react';
+import {Icon, Card, Button, message} from 'antd';
+import {post} from "../../../fetch";
+import {CORE, SYSTEM_URL} from '../../../config/http'
+import './style.less'
+import Modal from "antd/es/modal/Modal";
+import Label from '../../../components/Label'
+import {InputC,NumberInput} from '../../../components/Form'
+import {ImgUpload} from '../../../components/UploadComponent'
+
+
+const projectData = [
+    {id: '1', name: '1'},
+    {id: '2', name: '2'},
+]
+
+export default class Project extends Component {
+
+    state = {
+        projectData: [],
+        visible: false,
+        name: ''
+    }
+
+    componentDidMount() {
+        this.getData()
+    }
+
+    getData = () => {
+        post(`${CORE}/gim6d/layerProject/list`, {type:2}).then(data => {
+            if (data.code == 200) {
+                this.setState({
+                    projectData: data.data.records
+                })
+            }
+        })
+    }
+
+    addData = (param) => {
+        post(`${CORE}/gim6d/layerProject/add`, {...param,...{type:2}}).then(data => {
+            if (data.code != 200) {
+                message.error(data.message);
+                return;
+            }
+            message.success(data.message)
+            this.setState({visible:false})
+            this.getData();
+        })
+    }
+
+    choosePro = id => {
+        this.props.history.push({
+            pathname: '/gis',
+            state: {projectId:id}
+        })
+    }
+
+    renderProject = () => {
+        const {projectData} = this.state;
+        return projectData.map(d => (
+            <Card.Grid className='project-card' style={{width: '25%'}} onClick={() => this.choosePro(d.id)}>
+                <div className='project-item'>
+                    <Icon type="home" style={{fontSize: 24}}/>
+                    <span>{d.name}</span>
+                </div>
+            </Card.Grid>
+        ))
+    }
+
+    showModal = () => {
+        this.setState({
+            visible: true
+        })
+    }
+
+    addProject = () => {
+        const {name} = this.state;
+        this.addData({name, iconFileId: 1})
+    }
+
+    closeModal = () => {
+        this.setState({
+            visible: false
+        })
+    }
+
+    render() {
+        return (
+            <div>
+                <Button type='primary' onClick={this.showModal}>
+                    添加
+                </Button>
+                <Card>
+                    {this.renderProject()}
+                </Card>
+                <Modal
+                    title="添加项目"
+                    visible={this.state.visible}
+                    onOk={this.addProject}
+                    onCancel={this.closeModal}
+                    destroyOnClose
+                >
+                    <div className='class-list-content'>
+                        <Label>名称:</Label>
+                        <InputC
+                            precision={6}
+                            value={this.state.name}
+                            onChange={val => {
+                                this.setState({name: val})
+                            }}/>
+                    </div>
+                    {/*<div className='class-list-content' style={{marginTop:10}}>*/}
+                        {/*<Label>图片:</Label>*/}
+                        {/*<ImgUpload/>*/}
+                    {/*</div>*/}
+
+                </Modal>
+            </div>
+
+        );
+    }
+}

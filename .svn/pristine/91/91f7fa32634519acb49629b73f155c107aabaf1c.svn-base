@@ -1,0 +1,17 @@
+@projectPrefixCls: project;
+.@{projectPrefixCls} {
+  &-wrapper {
+    height: 100%;
+    padding: 20px;
+  }
+
+  &-content {
+    display: flex;
+    flex-wrap: wrap;
+  }
+
+  &-card {
+    width: 200px;
+    margin:5px;
+  }
+}
